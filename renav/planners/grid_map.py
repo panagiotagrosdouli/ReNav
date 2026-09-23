@@ -1,10 +1,12 @@
 """Minimal grid representation used by the ReNav reference model."""
 
 from __future__ import annotations
+
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 GridCell = tuple[int, int]
+
 
 @dataclass(frozen=True)
 class GridMap:
@@ -13,7 +15,12 @@ class GridMap:
     obstacles: frozenset[GridCell] = field(default_factory=frozenset)
 
     @classmethod
-    def from_obstacles(cls, width: int, height: int, obstacles: Iterable[GridCell] = ()) -> "GridMap":
+    def from_obstacles(
+        cls,
+        width: int,
+        height: int,
+        obstacles: Iterable[GridCell] = (),
+    ) -> GridMap:
         grid = cls(width, height, frozenset(obstacles))
         grid.validate()
         return grid
@@ -34,8 +41,9 @@ class GridMap:
 
     def neighbors4(self, cell: GridCell) -> list[GridCell]:
         x, y = cell
-        candidates = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
-        return [c for c in candidates if self.in_bounds(c) and self.passable(c)]
+        candidates = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        return [cell for cell in candidates if self.in_bounds(cell) and self.passable(cell)]
+
 
 def manhattan(a: GridCell, b: GridCell) -> int:
-    return abs(a[0]-b[0]) + abs(a[1]-b[1])
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
