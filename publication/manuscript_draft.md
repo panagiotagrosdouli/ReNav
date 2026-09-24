@@ -16,9 +16,9 @@ The contribution is limited to: (i) a finite-grid formulation that distinguishes
 
 ## 2. Related work and scope
 
-Safe-return constraints have been studied in hierarchical motion planning under probabilistic temporal tasks [1]. Belief-space planning has a long history, including the Belief Roadmap [2]. Probabilistic navigation with uncertain obstacles has also been addressed directly [3]. History-aware navigation has been explored in unknown uneven terrain, including simulation and physical-robot evaluation [4]. These works establish that uncertainty, safety, return behavior, and history can all be relevant to navigation.
+Safe-return constraints have been studied in hierarchical motion planning under probabilistic temporal tasks [1]. Belief-space planning has a long history, including the Belief Roadmap [2], while probabilistic navigation with uncertain obstacles has been addressed directly [3]. Risk models can depend on location, action, and traversal, and have been used in robot planning and physical experiments [5]. Risk-aware off-road navigation has combined uncertain traversability estimates with CVaR and kinodynamic planning [6]. History-aware navigation has also been explored in unknown uneven terrain, including simulation and physical-robot evaluation [4]. These lines of work establish that risk, action dependence, uncertainty, return behavior, and history are not new ideas in isolation.
 
-The present formulation is narrower than those themes: action execution activates stochastic changes to future topology, and the outcome of interest is connectivity to a designated safe set conditional on the activated-trigger history. This distinction is provisional. The current literature matrix is a seed review rather than a systematic search; any novelty statement must wait for a broader review and strong baseline comparisons.
+The present toy formulation asks a narrower question: when a known executed transition activates a stochastic remote topology change, does conditioning safe-return connectivity on the set of executed triggers alter decisions relative to specified baselines? The exact augmented state is simply a Markov state representation of the toy model; the repository does not establish that it is more compact or more effective than a fully Markovized environment state or belief-space policy. This distinction is provisional. The literature list is a seed review, not a systematic search, so no novelty claim is made. A defensible positioning requires a broader review and direct comparison with those stronger baselines.
 
 ## 3. Model
 
@@ -101,7 +101,7 @@ python -m pip install -e '.[dev,plots]'
 python experiments/run_mechanistic_sweep.py --trials 10000 --seed 20260924
 python publication/plot_mechanistic_sweep.py
 pytest -q
-ruff check renav tests experiments publication
+ruff check renav tests experiments
 ```
 
 The CI workflow runs the test suite and Ruff, generates both experiments and figures, and uploads output artifacts. The committed raw CSVs and code provide the durable record. The topology results concern one deliberately constructed synthetic generator; they do not establish performance on a natural-map distribution.
@@ -122,3 +122,6 @@ We formalized a minimal finite-grid setting in which executed actions activate s
 2. S. Prentice and N. Roy. “The Belief Roadmap: Efficient Planning in Belief Space by Factoring the Covariance.” *The International Journal of Robotics Research*, 28(11–12):1448–1465, 2009. https://doi.org/10.1177/0278364909341659
 3. B. Axelrod, L. P. Kaelbling, and T. Lozano-Pérez. “Provably Safe Robot Navigation with Obstacle Uncertainty.” *The International Journal of Robotics Research*, 37(2–3), 2018. https://doi.org/10.1177/0278364918778338
 4. Y. Wang et al. “History-Aware Planning for Risk-free Autonomous Navigation on Unknown Uneven Terrain.” *2024 IEEE International Conference on Robotics and Automation (ICRA)*, 2024. https://doi.org/10.1109/ICRA57147.2024.10610488
+
+5. X. Xiao, J. Dufek, and R. Murphy. “Robot Risk-Awareness by Formal Risk Reasoning and Planning.” *IEEE Robotics and Automation Letters*, 5(2):2856–2863, 2020. https://doi.org/10.1109/LRA.2020.2974434
+6. Y. Fan et al. “STEP: Stochastic Traversability Evaluation and Planning for Risk-Aware Off-road Navigation.” *Robotics: Science and Systems XVII*, 2021. https://doi.org/10.15607/RSS.2021.XVII.021
