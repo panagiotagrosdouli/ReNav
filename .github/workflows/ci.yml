@@ -14,14 +14,16 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e '.[dev,plots]'
       - run: pytest -q
-      - run: ruff check renav tests experiments
+      - run: ruff check renav tests experiments publication
       - run: python experiments/run_mechanistic_sweep.py --trials 10000 --seed 20260924
       - run: python publication/plot_mechanistic_sweep.py
+      - run: python experiments/run_heldout_topology_benchmark.py --maps 500 --first-seed 20261024
+      - run: python publication/plot_heldout_topology_benchmark.py
       - uses: actions/upload-artifact@v4
         with:
           name: renav-mechanistic-sweep-${{ github.sha }}
           path: |
             results/*.csv
-            publication/figures/mechanistic_sweep.svg
+            publication/figures/*.svg
           if-no-files-found: error
           retention-days: 90
