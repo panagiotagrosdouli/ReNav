@@ -7,7 +7,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-
 METHODS = {
     "geometric": ("geometric", "#4C78A8", "o"),
     "hard_return_0.8": ("hard return, threshold 0.8", "#F58518", "s"),
