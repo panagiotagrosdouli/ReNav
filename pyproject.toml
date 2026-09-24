@@ -12,6 +12,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
+plots = ["matplotlib>=3.8"]
 
 [tool.setuptools.packages.find]
 include = ["renav*"]
