@@ -20,6 +20,7 @@ def plot(input_path: Path, output_path: Path) -> None:
         rows = list(csv.DictReader(stream))
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    plt.rcParams["svg.fonttype"] = "none"
     figure, axis = plt.subplots(figsize=(6.4, 4.2), layout="constrained")
     for key, (label, color, marker) in METHODS.items():
         selected = sorted(
