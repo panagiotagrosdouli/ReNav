@@ -17,6 +17,12 @@ def test_mechanistic_sweep_records_paired_exact_and_empirical_results(tmp_path):
         rows = list(csv.DictReader(stream))
 
     assert len(rows) == 42
+    with output.with_name("sweep_trials.csv").open(
+        newline="", encoding="utf-8"
+    ) as stream:
+        raw_rows = list(csv.DictReader(stream))
+    assert len(raw_rows) == 6 * 5000
+    assert len(raw_rows[0]) == 11
     by_key = {
         (float(row["closure_probability"]), row["planner"]): row
         for row in rows
