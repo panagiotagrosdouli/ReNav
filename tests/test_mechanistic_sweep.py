@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import csv
+from pathlib import Path
+from runpy import run_path
 
-from experiments.run_mechanistic_sweep import run
+run = run_path(
+    str(Path(__file__).resolve().parents[1] / "experiments" / "run_mechanistic_sweep.py")
+)["run"]
 
 
 def test_mechanistic_sweep_records_paired_exact_and_empirical_results(tmp_path):
