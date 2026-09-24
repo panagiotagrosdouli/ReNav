@@ -4,7 +4,7 @@
 
 ## Abstract
 
-In some navigation problems, traversing a directed transition activates a stochastic change elsewhere in the environment. The change may affect whether a robot can later return to a designated safe set. In such settings, the robot's geometric position alone need not determine its return probability: the set of previously activated transitions can also matter. We formalize this mechanism on finite grid maps with known action triggers and independent Bernoulli closures, define exact safe-return probability by enumeration, and describe an augmented-state planner whose state includes position and executed-trigger history. A small analytic construction in the accompanying reference implementation exhibits two histories ending at the same cell with safe-return probabilities 1 and 0.2. This establishes a representational counterexample to a planner that retains position but discards trigger history under the stated model. It does not establish practical benefit, broad novelty, real-world safety, or superiority over Markov, belief-space, or constrained-planning methods. ReNav is therefore presented as a falsifiable problem formulation and preliminary reference implementation. Comparative held-out-map experiments, simulator evidence, a broader literature review, and scalability analysis remain necessary before submission.
+In some navigation problems, traversing a directed transition activates a stochastic change elsewhere in the environment. The change may affect whether a robot can later return to a designated safe set. In such settings, the robot's geometric position alone need not determine its return probability: the set of previously activated transitions can also matter. We formalize this mechanism on finite grid maps with known action triggers and independent Bernoulli closures, define exact safe-return probability by enumeration, and describe an augmented-state planner whose state includes position and executed-trigger history. A small analytic construction in the accompanying reference implementation exhibits two histories ending at the same cell with safe-return probabilities 1 and 0.2. This establishes a representational counterexample to a planner that retains position but discards trigger history under the stated model. It does not establish practical benefit, broad novelty, real-world safety, or superiority over Markov, belief-space, or constrained-planning methods. On one constructed grid, a paired Monte Carlo sweep with 10,000 common random-number trials per probability showed that a hard return threshold and a soft history-conditioned objective choose the same routes over much of the sweep. At closure probability 0.8, both avoid the trigger and achieve success 1.0000, while geometric shortest path succeeds at 0.2005 (paired gain 0.7995; 95% interval 0.7917–0.8073). This is single-map mechanism evidence, not map-generalization or real-world efficacy evidence. Held-out-map experiments, stronger baselines, broader literature review, and simulator evidence remain necessary before submission.
 
 ## 1. Introduction
 
@@ -60,29 +60,43 @@ The preregistered comparator set includes geometric shortest path, a state-only 
 
 This is an analytic counterexample for the specified finite model. The repository tests also check that, for one declared penalty weight, the reference planner chooses a longer route that avoids the trigger, while zero recoverability weight yields a shortest route that activates it. These tests demonstrate expected behavior on a constructed instance; they are not a comparative evaluation over a sampled environment distribution.
 
-## 6. Preliminary paired sweep
+## 6. Paired synthetic experiment
 
-The repository runner `experiments/run_mechanistic_sweep.py` evaluates the canonical 4-by-3 map at closure probabilities 0.1, 0.2, 0.4, 0.6, 0.8, and 0.9. It compares the geometric route, a hard-return threshold of 0.8, and exact-history A* at penalty weights 0, 1, 2, 4, and 8. For each probability, all planners share the same 10,000 Bernoulli draws (seed 20260924). The runner records path length, activated hazards, empirical mission-and-return success, Wilson 95% intervals, and the exact success probability implied by the chosen route.
+We evaluated the canonical 4-by-3 trap map at closure probabilities 0.1, 0.2, 0.4, 0.6, 0.8, and 0.9. The planners were geometric shortest path, a hard return-probability threshold of 0.8, and history-conditioned A* with recoverability weights 0, 1, 2, 4, and 8. For each probability, every planner was evaluated against the same 10,000 uniform random draws (seed 20260924). A draw realizes a closure only for planners that execute its trigger. The outcome is successful goal arrival followed by successful return to the safe set. The runner records raw paired outcomes, route length, activated hazards, empirical success, Wilson 95% intervals, exact route-level success probabilities, and paired differences versus geometry with Wald intervals.
 
-For this map, the geometric route has length 3 and activates the closure trigger, so its exact return success probability is 1-p. The hard-threshold planner chooses that route when 1-p is at least 0.8, and otherwise takes a length-5 route that avoids the trigger and returns with probability 1. The soft objective trades the same route-length difference against lambda*p; under the stated costs, the longer route is preferable when lambda*p exceeds 2. These values follow directly from the two route costs on this constructed map. They are not estimates of average performance over environments.
+### Results
 
-**Execution status:** the runner and an integration regression have been added to the open paper PR. The test checks the Monte Carlo estimates against the exact route-level probabilities. A versioned CSV with the declared 10,000-trial command and seed still needs to be generated and retained before these values are presented as an executed experimental result.
+The direct geometric path has length 3 and activates the trigger; the avoiding route has length 5. At closure probabilities 0.1 and 0.2, all evaluated policies take the direct path. At 0.4, the hard threshold and weight-8 history planner take the detour while weight 4 still takes the direct path. At 0.6, 0.8, and 0.9, the hard threshold and history planner at weights 4 and 8 take the detour.
 
-## 7. Evidence and reproducibility status
+At p=0.8, geometric success was 0.2005 (Wilson 95% CI 0.1928–0.2085). The hard-return planner and history A* with weight 4 each succeeded in all 10,000 trials (Wilson 95% CI 0.9996–1.0000). The paired success gain of the hard-return planner over geometry was 0.7995 (paired Wald 95% CI 0.7917–0.8073). At p=0.4, the weight-4 planner retained the direct path and matched geometric success at 0.6007; the hard-return planner took the detour, with paired gain 0.3993 (95% CI 0.3897–0.4089).
 
-The public repository contains the finite-grid model, exact independent-closure return oracle, augmented-state A*, a small unit-test suite, a research protocol, a CI workflow, and the single-map sweep described above. On 24 September 2026, the follow-up core-contract PR passed GitHub Actions and was merged. These checks establish software behavior on the tested cases only.
+These results show a route-cost/risk trade-off on the declared map. They also show a negative result for any superiority claim: in regimes where the hard threshold and soft objective select the same route, the hard planner matches the soft planner's success. The exact probabilities are determined by the route and the Bernoulli model; repeated trials quantify Monte Carlo variability and are not independent environment instances.
 
-The repository does not contain held-out-map experiments, ROS/Nav2 or Gazebo packages, evidence manifests, or simulator trials. No broad quantitative comparative result is claimed. Before submission, broader experiments must include exact commit, command, parameters, seed set, environment metadata, raw trial records, and analysis.
+The complete summary table is in `results/mechanistic_sweep.csv`; a detailed description is in `publication/mechanistic_sweep_report.md`; and Figure 1 is `publication/figures/mechanistic_sweep.svg`.
 
-The frozen protocol calls for common latent hazard draws across planners; geometric, state-only marginal-risk, exact-history, hard-safe-return, and scalable-approximation baselines; paired outcomes and confidence intervals; held-out topology families; no-effect and miscalibration regimes; and preservation of negative results. Required outcomes include post-invalidation recovery-infeasible failure, mission success, return probability, path length, planning latency, activated hazards, and realized closures.
+## 7. Evidence and reproducibility
 
-## 7. Limitations and open tests
+The raw paired trial file was generated by GitHub Actions run [35979953475](https://github.com/panagiotagrosdouli/ReNav/actions/runs/35979953475) from commit `e9b64d7f89ac7d309517ee1af26d95526843c8b8`, using `python experiments/run_mechanistic_sweep.py --trials 10000 --seed 20260924`. The run retained 60,000 rows in the Actions artifact (artifact ID `10799716911`). Its ZIP SHA-256 is `7c1f5d003140f1ba68f6fd51249d1cc7f7e1081873c691988b27539c28d7936a`. The aggregate CSV is committed in the repository. The Actions artifact expires on 23 December 2026, so the raw trial file still needs durable archiving before submission. A future claim must cite the final archived data DOI or an immutable repository release.
 
-The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and the timing of replanning. The construction and current sweep use one hand-designed map and cannot establish map generalization.
+Reproduce the sweep with:
 
-The strongest baseline may encode the activation state in a Markov or belief state without calling it history. The soft objective may be matched or exceeded by a hard return constraint. Results may be sensitive to probability calibration and event correlation. Exact enumeration scales exponentially. Finally, the proposed distinction may be covered by prior work not yet captured in the seed literature matrix. These are central falsification questions, not peripheral caveats.
+```bash
+python -m pip install -e '.[dev,plots]'
+python experiments/run_mechanistic_sweep.py --trials 10000 --seed 20260924
+python publication/plot_mechanistic_sweep.py
+pytest -q
+ruff check renav tests experiments publication
+```
 
-## 8. Conclusion
+The CI workflow runs the test suite and Ruff, generates the sweep and Figure 1, and uploads the summary and raw trials as a versioned Actions artifact. The results are only reproducible for this synthetic case; they do not establish performance on a held-out map distribution.
+
+## 8. Limitations and open tests
+
+The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and replanning delays. The current experiment uses one hand-designed map; 60,000 paired rows across six probabilities do not substitute for independent maps.
+
+The study still lacks a fixed state-only marginal-risk baseline, a scalable approximation, randomized held-out topology families, model-miscalibration and correlation regimes, and simulator evaluation. A richer Markov or belief state can encode trigger activation. The hard-return comparator matches the soft objective in multiple tested regimes. These points limit the novelty and algorithmic claims and are central tests for the next study.
+
+## 9. Conclusion
 
 We formalized a minimal finite-grid setting in which executed actions activate stochastic closures that affect return connectivity. An exact construction proves that position alone can alias two histories with different safe-return probabilities. The reference implementation makes this distinction executable and testable. Whether this mechanism supports a useful algorithmic contribution remains an empirical question. The present manuscript is a starting point for that evaluation, not evidence of efficacy or a submission-ready account.
 
