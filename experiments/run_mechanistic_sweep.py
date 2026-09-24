@@ -162,9 +162,24 @@ def run(
             )
             raw_rows.append(raw_row)
 
+        geometric_outcomes = outcomes["geometric"]
         for name, path in paths.items():
             successes = sum(outcomes[name])
             lower, upper = wilson(successes, trials)
+            differences = [
+                outcome - baseline
+                for outcome, baseline in zip(
+                    outcomes[name], geometric_outcomes, strict=True
+                )
+            ]
+            paired_delta = sum(differences) / trials
+            if trials > 1:
+                variance = sum((value - paired_delta) ** 2 for value in differences) / (
+                    trials - 1
+                )
+                paired_se = math.sqrt(variance / trials)
+            else:
+                paired_se = 0.0
             active = active_by_planner[name]
             rows.append(
                 {
@@ -178,6 +193,9 @@ def run(
                     "empirical_success_rate": successes / trials,
                     "wilson_95_low": lower,
                     "wilson_95_high": upper,
+                    "paired_delta_vs_geometric": paired_delta,
+                    "paired_delta_95_low": paired_delta - 1.96 * paired_se,
+                    "paired_delta_95_high": paired_delta + 1.96 * paired_se,
                     "exact_success_probability": 1.0 - probability * bool(active),
                 }
             )
