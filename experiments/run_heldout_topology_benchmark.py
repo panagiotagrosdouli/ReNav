@@ -271,6 +271,21 @@ def summarize(rows: list[dict], regimes: tuple[str, ...]) -> list[dict]:
             ]
             mean_success = sum(successes) / n
             success_low, success_high = wilson(sum(successes), n)
+            mean_exact_success = sum(
+                float(row[f"exact_success_{method}"]) for row in subset
+            ) / n
+            history_delta = [
+                value - int(row["success_history_weight_4"])
+                for value, row in zip(successes, subset, strict=True)
+            ]
+            mean_history_delta = sum(history_delta) / n
+            history_variance = (
+                sum((value - mean_history_delta) ** 2 for value in history_delta)
+                / (n - 1)
+                if n > 1
+                else 0.0
+            )
+            history_se = (history_variance / n) ** 0.5
             mean_delta = sum(delta) / n
             variance = (
                 sum((value - mean_delta) ** 2 for value in delta) / (n - 1)
@@ -286,6 +301,10 @@ def summarize(rows: list[dict], regimes: tuple[str, ...]) -> list[dict]:
                     "success_rate": mean_success,
                     "success_95_low": success_low,
                     "success_95_high": success_high,
+                    "mean_exact_success_probability": mean_exact_success,
+                    "paired_delta_vs_history_weight_4": mean_history_delta,
+                    "history_delta_95_low": mean_history_delta - 1.96 * history_se,
+                    "history_delta_95_high": mean_history_delta + 1.96 * history_se,
                     "paired_delta_vs_geometric": mean_delta,
                     "paired_95_low": mean_delta - 1.96 * se,
                     "paired_95_high": mean_delta + 1.96 * se,
