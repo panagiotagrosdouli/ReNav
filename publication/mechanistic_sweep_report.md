@@ -15,7 +15,7 @@ The outbound start is (0,1), the goal is (3,1), and the safe set is {(0,1)}. Sta
 - Outcomes: mission-and-return success, route length, activated hazards, exact success probability, Wilson 95% intervals, and paired success difference versus geometric with a paired Wald 95% interval.
 - Summary table: [`results/mechanistic_sweep.csv`](../results/mechanistic_sweep.csv).
 - Figure: [`publication/figures/mechanistic_sweep.svg`](figures/mechanistic_sweep.svg).
-- Raw trials: GitHub Actions artifact from run [35979953475](https://github.com/panagiotagrosdouli/ReNav/actions/runs/35979953475), artifact ID `10799716911`, 60,000 rows, SHA-256 `7c1f5d003140f1ba68f6fd51249d1cc7f7e1081873c691988b27539c28d7936a`. The artifact expires on 2026-12-23; archive the raw CSV in a permanent repository release or DOI-backed archive before submission.
+- Raw trials: GitHub Actions artifact from run [35979953475](https://github.com/panagiotagrosdouli/ReNav/actions/runs/35979953475), artifact ID `10799716911`, 60,000 rows. The ZIP artifact SHA-256 is `7c1f5d003140f1ba68f6fd51249d1cc7f7e1081873c691988b27539c28d7936a`. The artifact expires on 2026-12-23; archive the raw CSV in a permanent repository release or DOI-backed archive before submission.
 
 ## Selected results
 
