@@ -8,8 +8,9 @@ from __future__ import annotations
 import argparse
 import csv
 import math
-from pathlib import Path
 import random
+from itertools import pairwise
+from pathlib import Path
 
 from renav.hazards import (
     ActionTriggeredClosure,
@@ -95,7 +96,7 @@ def activated_hazards(
     path: tuple[GridCell, ...], model: ActionTriggeredHazardModel
 ) -> frozenset[int]:
     active: frozenset[int] = frozenset()
-    for source, target in zip(path, path[1:]):
+    for source, target in pairwise(path):
         active = model.active_indices_after(source, target, active)
     return active
 
