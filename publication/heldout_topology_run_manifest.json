@@ -1,0 +1,38 @@
+{
+  "study": "heldout_topology_stress_test_v1",
+  "status": "synthetic stress test; not a natural-map or real-world sample",
+  "workflow_run_id": 35982098729,
+  "benchmark_commit": "b24647b7114320a251a75ddfb8586a8fad103e4a",
+  "protocol": "docs/experimental_protocol_v2.md",
+  "command": "python experiments/run_heldout_topology_benchmark.py --maps 500 --first-seed 20261024",
+  "seed_range_inclusive": [20261024, 20261523],
+  "completed_maps": 500,
+  "rejected_candidates": 187,
+  "regime_counts": {
+    "critical": 300,
+    "harmless": 100,
+    "no_effect": 100
+  },
+  "common_random_numbers": true,
+  "artifact": {
+    "id": 10800816668,
+    "zip_sha256": "5b2c3489ce036430738ef79d6c7e34f19232ea4591eca55741bc5caf53aa1733",
+    "expiration_date": "2026-12-23"
+  },
+  "files": {
+    "raw_trials": {
+      "path": "results/heldout_topology_trials.csv",
+      "rows_excluding_header": 500,
+      "sha256": "b7c6380b8bf66e45e81b3769ae1ea6f98303e4233af795f55947c83964e825f7"
+    },
+    "summary": {
+      "path": "results/heldout_topology_summary.csv",
+      "rows_excluding_header": 16,
+      "sha256": "d5eac0c7c78d723a7d828189f71b1b8be7b9ef7cc09ea9bffb5fa9057d14ef7d"
+    },
+    "figure": {
+      "path": "publication/figures/heldout_topology.svg",
+      "sha256": "47d8cf2a55ecc0c392b35188443e6578da60412893b576779702b4bf5cb0e75c"
+    }
+  }
+}
