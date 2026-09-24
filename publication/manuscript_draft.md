@@ -1,6 +1,6 @@
 # When Executed Actions Change the Way Home: A Minimal Model of History-Conditioned Return Connectivity
 
-**Working manuscript — 24 September 2026.** This is a research draft, not a submission-ready paper. It records the model and the currently verified analytical construction. The repository includes a paired Monte Carlo sweep on one constructed grid and a 500-map synthetic stress test from one seeded wall-and-gap generator. These results are preliminary evidence under declared synthetic assumptions, not evidence of real-world efficacy or generalization to natural maps.
+**Working manuscript — 24 September 2026.** This is a research draft, not a submission-ready paper. It records the model, analytical construction, and completed synthetic experiments. The repository includes a paired Monte Carlo sweep on one constructed grid and a 500-map synthetic stress test from one seeded wall-and-gap generator. These results are preliminary evidence under declared synthetic assumptions, not evidence of real-world efficacy or generalization to natural maps.
 
 ## Abstract
 
@@ -108,7 +108,7 @@ The CI workflow runs the test suite and Ruff, generates both experiments and fig
 
 ## 9. Limitations and open tests
 
-The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and replanning delays. The current experiment uses one hand-designed map; 60,000 paired rows across six probabilities do not substitute for independent maps.
+The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and replanning delays. The canonical sweep uses one hand-designed map; repeated random draws over six closure probabilities quantify Monte Carlo variability but do not sample independent maps. A separate 500-map experiment samples one deliberately bottleneck-enriched synthetic generator, not a natural-map distribution.
 
 The study now includes one randomized synthetic topology family and a fixed state-only marginal-risk baseline. It still lacks broader topology families, a strong fully Markovized environment-state or belief-space baseline, model-miscalibration and correlated-hazard regimes, and simulator evaluation. A richer Markov or belief state can encode trigger activation. The hard-return comparator matched or exceeded the soft objective in the tested regimes. These points constrain novelty and algorithmic claims and are central tests for the next study.
 
