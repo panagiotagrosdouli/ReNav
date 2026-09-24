@@ -5,6 +5,8 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -12,4 +14,11 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e '.[dev]'
       - run: pytest -q
-      - run: ruff check renav tests
+      - run: ruff check renav tests experiments
+      - run: python experiments/run_mechanistic_sweep.py --trials 10000 --seed 20260924
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renav-mechanistic-sweep-${{ github.sha }}
+          path: results/*.csv
+          if-no-files-found: error
+          retention-days: 90
