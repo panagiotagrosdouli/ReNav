@@ -34,8 +34,8 @@ def plot(input_path: Path, output_path: Path) -> None:
             x,
             y,
             yerr=[
-                [estimate - low for estimate, low in zip(y, lower, strict=True)],
-                [high - estimate for estimate, high in zip(y, upper, strict=True)],
+                [max(0.0, estimate - low) for estimate, low in zip(y, lower, strict=True)],
+                [max(0.0, high - estimate) for estimate, high in zip(y, upper, strict=True)],
             ],
             label=label,
             color=color,
