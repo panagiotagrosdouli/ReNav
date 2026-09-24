@@ -40,6 +40,12 @@ def test_heldout_topology_runner_retains_controls_and_paired_outcomes(tmp_path):
     ) as stream:
         summary = list(csv.DictReader(stream))
     assert len(summary) == 16
+    assert {
+        "mean_exact_success_probability",
+        "paired_delta_vs_history_weight_4",
+        "history_delta_95_low",
+        "history_delta_95_high",
+    } <= set(summary[0])
     assert {row["regime"] for row in summary} == {
         "all",
         "critical",
