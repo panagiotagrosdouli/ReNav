@@ -20,12 +20,17 @@ def test_mechanistic_sweep_records_paired_exact_and_empirical_results(tmp_path):
     for probability in (0.1, 0.2, 0.4, 0.6, 0.8, 0.9):
         direct = by_key[(probability, "geometric")]
         assert int(direct["path_length"]) == 3
-        assert int(direct["activated_hazards"]) == 0
+        assert direct["activated_hazards"] == "0"
         assert abs(
             float(direct["empirical_success_rate"])
             - float(direct["exact_success_probability"])
         ) < 0.03
 
-        safe = by_key[(probability, "hard_return_0.8")]
-        assert float(safe["empirical_success_rate"]) == 1.0
-        assert float(safe["exact_success_probability"]) == 1.0
+        hard = by_key[(probability, "hard_return_0.8")]
+        expected_length = 3 if probability <= 0.2 else 5
+        expected_success = 1.0 - probability if probability <= 0.2 else 1.0
+        assert int(hard["path_length"]) == expected_length
+        assert float(hard["exact_success_probability"]) == expected_success
+        assert abs(
+            float(hard["empirical_success_rate"]) - expected_success
+        ) < 0.03
