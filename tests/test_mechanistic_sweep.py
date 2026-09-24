@@ -44,3 +44,7 @@ def test_mechanistic_sweep_records_paired_exact_and_empirical_results(tmp_path):
         assert abs(
             float(hard["empirical_success_rate"]) - expected_success
         ) < 0.03
+        expected_paired_delta = probability if probability > 0.2 else 0.0
+        assert abs(
+            float(hard["paired_delta_vs_geometric"]) - expected_paired_delta
+        ) < 0.03
