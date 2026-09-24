@@ -220,7 +220,6 @@ def policy_paths(world: dict, weight: float) -> dict[str, tuple[GridCell, ...]]:
 def path_success(world: dict, path: tuple[GridCell, ...], draw: float) -> tuple[int, float, bool]:
     if not path:
         return 0, 0.0, False
-    model = world["model"]
     active = False
     trigger_index = -1
     for index, edge in enumerate(pairwise(path)):
