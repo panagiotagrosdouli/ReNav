@@ -246,6 +246,17 @@ def path_success(world: dict, path: tuple[GridCell, ...], draw: float) -> tuple[
     return realized_success, exact_success, True
 
 
+def wilson(successes: int, n: int) -> tuple[float, float]:
+    z = 1.959963984540054
+    estimate = successes / n
+    denominator = 1.0 + z * z / n
+    center = (estimate + z * z / (2.0 * n)) / denominator
+    radius = z * (
+        estimate * (1.0 - estimate) / n + z * z / (4.0 * n * n)
+    ) ** 0.5 / denominator
+    return center - radius, center + radius
+
+
 def summarize(rows: list[dict], regimes: tuple[str, ...]) -> list[dict]:
     methods = ("geometric", "static_marginal", "history_weight_4", "hard_return_0.8")
     summary = []
@@ -259,6 +270,7 @@ def summarize(rows: list[dict], regimes: tuple[str, ...]) -> list[dict]:
                 for value, row in zip(successes, subset, strict=True)
             ]
             mean_success = sum(successes) / n
+            success_low, success_high = wilson(sum(successes), n)
             mean_delta = sum(delta) / n
             variance = (
                 sum((value - mean_delta) ** 2 for value in delta) / (n - 1)
@@ -272,6 +284,8 @@ def summarize(rows: list[dict], regimes: tuple[str, ...]) -> list[dict]:
                     "n_maps": n,
                     "planner": method,
                     "success_rate": mean_success,
+                    "success_95_low": success_low,
+                    "success_95_high": success_high,
                     "paired_delta_vs_geometric": mean_delta,
                     "paired_95_low": mean_delta - 1.96 * se,
                     "paired_95_high": mean_delta + 1.96 * se,
