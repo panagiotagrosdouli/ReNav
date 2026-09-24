@@ -84,7 +84,9 @@ def hard_threshold_path(
         return ()
     states = [final]
     while parent[states[-1]] is not None:
-        states.append(states[-1] if False else parent[states[-1]])
+        previous = parent[states[-1]]
+        assert previous is not None
+        states.append(previous)
     states.reverse()
     return tuple(state[0] for state in states)
 
