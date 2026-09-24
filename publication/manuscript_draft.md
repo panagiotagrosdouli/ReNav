@@ -1,10 +1,10 @@
 # When Executed Actions Change the Way Home: A Minimal Model of History-Conditioned Return Connectivity
 
-**Working manuscript — 24 September 2026.** This is a research draft, not a submission-ready paper. It records the model and the currently verified analytical construction. The repository does not yet contain the benchmark suite or independent comparative evidence needed for efficacy or generalization claims.
+**Working manuscript — 24 September 2026.** This is a research draft, not a submission-ready paper. It records the model and the currently verified analytical construction. The repository now includes a paired Monte Carlo sweep on one constructed grid. It does not yet contain held-out-map experiments or independent evidence for efficacy or generalization claims.
 
 ## Abstract
 
-In some navigation problems, traversing a directed transition activates a stochastic change elsewhere in the environment. The change may affect whether a robot can later return to a designated safe set. In such settings, the robot's geometric position alone need not determine its return probability: the set of previously activated transitions can also matter. We formalize this mechanism on finite grid maps with known action triggers and independent Bernoulli closures, define exact safe-return probability by enumeration, and describe an augmented-state planner whose state includes position and executed-trigger history. A small analytic construction in the accompanying reference implementation exhibits two histories ending at the same cell with safe-return probabilities 1 and 0.2. This establishes a representational counterexample to a planner that retains position but discards trigger history under the stated model. It does not establish practical benefit, broad novelty, real-world safety, or superiority over Markov, belief-space, or constrained-planning methods. ReNav is therefore presented as a falsifiable problem formulation and preliminary reference implementation. Comparative synthetic and simulator experiments, broader literature review, and scalability analysis remain necessary before submission.
+In some navigation problems, traversing a directed transition activates a stochastic change elsewhere in the environment. The change may affect whether a robot can later return to a designated safe set. In such settings, the robot's geometric position alone need not determine its return probability: the set of previously activated transitions can also matter. We formalize this mechanism on finite grid maps with known action triggers and independent Bernoulli closures, define exact safe-return probability by enumeration, and describe an augmented-state planner whose state includes position and executed-trigger history. A small analytic construction in the accompanying reference implementation exhibits two histories ending at the same cell with safe-return probabilities 1 and 0.2. This establishes a representational counterexample to a planner that retains position but discards trigger history under the stated model. It does not establish practical benefit, broad novelty, real-world safety, or superiority over Markov, belief-space, or constrained-planning methods. ReNav is therefore presented as a falsifiable problem formulation and preliminary reference implementation. Comparative held-out-map experiments, simulator evidence, a broader literature review, and scalability analysis remain necessary before submission.
 
 ## 1. Introduction
 
@@ -22,27 +22,35 @@ The present formulation is narrower than those themes: action execution activate
 
 ## 3. Model
 
-Let a finite four-connected grid be (G=(V,E)), with static obstacle set (Osubset V), start/goal cells, and designated safe set (Ssubseteq V). The robot state used by the reference planner is
-[
-s_t=(x_t,H_t),
-]
-where (x_tin V\setminus O) is the current cell and (H_t) is the set of trigger indices activated by *executed* transitions up to time (t).
+Let a finite four-connected grid be a graph G=(V,E), with static obstacle set O, start and goal cells, and designated safe set S. The planner state is
 
-A hazard (i) comprises a directed trigger edge (e_i=(u_i,v_i)in E), a closure cell (c_iin V\setminus O), and a known probability (p_iin[0,1]). Executing (e_i) adds (i) to (H_t); merely considering a candidate path does not. For the exact oracle, each active hazard corresponds to a distinct closure cell and closure events are independent. The current implementation does not model uncertain probabilities, correlations, sensing, robot dynamics, or delayed observations.
+```
+s_t = (x_t, H_t)
+```
 
-For current cell (x) and active set (H), define safe-return probability
-[
-R(x,H)=\Pr\bigl(\exists\text{ a traversable path from }x\text{ to some }s\in S\mid H\bigr).
-]
-The oracle enumerates every realization of the active closure cells, computes its Bernoulli probability, and sums the probability mass of realizations in which graph search reaches (S). Its cost is exponential in the number (k) of active closure cells: (O(2^k(|V|+|E|))) for a straightforward implementation.
+where x_t is the current free cell and H_t is the set of trigger indices activated by transitions actually executed up to time t.
+
+Hazard i comprises a directed trigger edge e_i=(u_i,v_i) in E, a closure cell c_i not in O, and a known probability p_i in [0,1]. Executing e_i adds i to H_t; merely considering a candidate plan does not. The exact oracle assumes each active hazard corresponds to a distinct closure cell and closure events are independent. The implementation does not model uncertain probabilities, correlations, sensing, robot dynamics, or delayed observations.
+
+For current cell x and active set H, safe-return probability is
+
+```
+R(x, H) = P(a traversable path exists from x to some s in S | H).
+```
+
+The oracle enumerates every realization of the active closure cells, computes its Bernoulli probability, and sums the probability mass of realizations in which graph search reaches S. A straightforward implementation costs O(2^k (|V|+|E|)) for k active closure cells.
 
 ## 4. Planner
 
-The reference planner runs A* on augmented states ((x,H)). For each legal move (x\to x'), it updates (H') only when that directed transition is executed in the search path, then evaluates (R(x',H')). The implemented edge cost is
-[
-c((x,H),(x',H'))=c_{\mathrm{step}}+\lambda\bigl(1-R(x',H')\bigr),
-]
-with nonnegative (c_{\mathrm{step}}) and (lambda). A Manhattan-distance heuristic is used on the unit-cost grid. The objective is a soft recoverability penalty; it is not a chance constraint or a safety guarantee. The repository's protocol identifies geometric shortest path, fixed state-only marginal-risk, hard safe-return, and scalable-approximation planners as required experimental comparators. Only the geometric and augmented-state reference planners are present in the current minimal code tree.
+The reference planner runs A* on augmented states (x,H). For each legal move x to x', it updates H' only when the directed transition is traversed by that candidate route, then evaluates R(x',H'). The implemented edge cost is
+
+```
+c((x,H),(x',H')) = c_step + lambda * (1 - R(x',H'))
+```
+
+with nonnegative c_step and lambda. The heuristic is Manhattan distance on the unit-cost grid. The objective is a soft recoverability penalty; it is not a chance constraint or safety guarantee.
+
+The preregistered comparator set includes geometric shortest path, a state-only marginal-risk planner, a hard safe-return constraint, and a scalable approximation. These baselines are not all implemented yet. The current paired sweep compares the geometric path, the exact-history planner over several penalty weights, and a hard-return-threshold planner on the canonical map.
 
 ## 5. Analytical construction
 
@@ -52,17 +60,25 @@ with nonnegative (c_{\mathrm{step}}) and (lambda). A Manhattan-distance heuristi
 
 This is an analytic counterexample for the specified finite model. The repository tests also check that, for one declared penalty weight, the reference planner chooses a longer route that avoids the trigger, while zero recoverability weight yields a shortest route that activates it. These tests demonstrate expected behavior on a constructed instance; they are not a comparative evaluation over a sampled environment distribution.
 
-## 6. Evidence and reproducibility status
+## 6. Preliminary paired sweep
 
-The public repository currently contains the finite-grid model, exact independent-closure return oracle, augmented-state A*, a small unit-test suite, a research protocol, and a CI workflow. On 24 September 2026, the follow-up core-contract PR passed GitHub Actions and was merged. These checks establish software-level regressions only.
+The repository runner `experiments/run_mechanistic_sweep.py` evaluates the canonical 4-by-3 map at closure probabilities 0.1, 0.2, 0.4, 0.6, 0.8, and 0.9. It compares the geometric route, a hard-return threshold of 0.8, and exact-history A* at penalty weights 0, 1, 2, 4, and 8. For each probability, all planners share the same 10,000 Bernoulli draws (seed 20260924). The runner records path length, activated hazards, empirical mission-and-return success, Wilson 95% intervals, and the exact success probability implied by the chosen route.
 
-The repository README describes larger experiments, simulator infrastructure, manifests, and retained results, but those paths are not present in the current default-branch tree. The README's empirical-status statements therefore cannot be independently verified from the current checkout and are not used as evidence in this draft. Before submission, the project must either restore the scripts, raw trials, run manifests, analysis, and artifacts it refers to, or revise the README to match the available material.
+For this map, the geometric route has length 3 and activates the closure trigger, so its exact return success probability is 1-p. The hard-threshold planner chooses that route when 1-p is at least 0.8, and otherwise takes a length-5 route that avoids the trigger and returns with probability 1. The soft objective trades the same route-length difference against lambda*p; under the stated costs, the longer route is preferable when lambda*p exceeds 2. These values follow directly from the two route costs on this constructed map. They are not estimates of average performance over environments.
 
-The frozen protocol calls for common latent hazard draws across planners; geometric, state-only marginal-risk, exact-history, hard-safe-return, and scalable-approximation baselines; paired outcomes and confidence intervals; held-out topology families; no-effect and miscalibration regimes; and preservation of negative results. Required outcomes include post-invalidation recovery-infeasible failure, mission success, return probability, path length, planning latency, activated hazards, and realized closures. No quantitative comparative result is claimed here.
+**Execution status:** the runner and an integration regression have been added to the open paper PR. The test checks the Monte Carlo estimates against the exact route-level probabilities. A versioned CSV with the declared 10,000-trial command and seed still needs to be generated and retained before these values are presented as an executed experimental result.
+
+## 7. Evidence and reproducibility status
+
+The public repository contains the finite-grid model, exact independent-closure return oracle, augmented-state A*, a small unit-test suite, a research protocol, a CI workflow, and the single-map sweep described above. On 24 September 2026, the follow-up core-contract PR passed GitHub Actions and was merged. These checks establish software behavior on the tested cases only.
+
+The repository does not contain held-out-map experiments, ROS/Nav2 or Gazebo packages, evidence manifests, or simulator trials. No broad quantitative comparative result is claimed. Before submission, broader experiments must include exact commit, command, parameters, seed set, environment metadata, raw trial records, and analysis.
+
+The frozen protocol calls for common latent hazard draws across planners; geometric, state-only marginal-risk, exact-history, hard-safe-return, and scalable-approximation baselines; paired outcomes and confidence intervals; held-out topology families; no-effect and miscalibration regimes; and preservation of negative results. Required outcomes include post-invalidation recovery-infeasible failure, mission success, return probability, path length, planning latency, activated hazards, and realized closures.
 
 ## 7. Limitations and open tests
 
-The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and the timing of replanning. The construction is intentionally hand-designed and cannot establish map generalization.
+The model assumes a known static grid, known trigger semantics, known closure probabilities, independent closure events, a known safe set, and exact enumeration over a bounded number of hazards. It abstracts away continuous dynamics, localization and perception uncertainty, trigger observability, execution failures, and the timing of replanning. The construction and current sweep use one hand-designed map and cannot establish map generalization.
 
 The strongest baseline may encode the activation state in a Markov or belief state without calling it history. The soft objective may be matched or exceeded by a hard return constraint. Results may be sensitive to probability calibration and event correlation. Exact enumeration scales exponentially. Finally, the proposed distinction may be covered by prior work not yet captured in the seed literature matrix. These are central falsification questions, not peripheral caveats.
 
