@@ -1,7 +1,7 @@
 """Paired Monte Carlo mechanism sweep for the canonical ReNav trap map.
 
 This is a narrow constructed-instance experiment, not evidence of map generalization.
-Uses common Bernoulli draws across planners and writes one row per p/weight pair.
+It retains both per-trial paired outcomes and exact route-level expectations.
 """
 from __future__ import annotations
 
@@ -72,12 +72,9 @@ def hard_threshold_path(
             break
         for nxt in grid.neighbors4(cell):
             next_active = model.active_indices_after(cell, nxt, active)
-            if (
-                history_conditioned_return_probability(
-                    grid, nxt, safe_cells, model, next_active
-                )
-                < threshold
-            ):
+            if history_conditioned_return_probability(
+                grid, nxt, safe_cells, model, next_active
+            ) < threshold:
                 continue
             next_state = (nxt, next_active)
             if next_state not in parent:
@@ -87,7 +84,7 @@ def hard_threshold_path(
         return ()
     states = [final]
     while parent[states[-1]] is not None:
-        states.append(parent[states[-1]])
+        states.append(states[-1] if False else parent[states[-1]])
     states.reverse()
     return tuple(state[0] for state in states)
 
@@ -110,27 +107,25 @@ def wilson(successes: int, n: int) -> tuple[float, float]:
     return center - radius, center + radius
 
 
-def run(trials: int, seed: int, output: Path) -> None:
+def run(
+    trials: int,
+    seed: int,
+    output: Path,
+    raw_output: Path | None = None,
+) -> None:
     probabilities = (0.1, 0.2, 0.4, 0.6, 0.8, 0.9)
     weights = (0.0, 1.0, 2.0, 4.0, 8.0)
     threshold = 0.8
     rng = random.Random(seed)
     rows = []
+    raw_rows = []
     for probability in probabilities:
         grid, start, goal, model = make_case(probability)
         geometric = geometric_path(grid, start, goal)
         hard = hard_threshold_path(
-            grid,
-            start,
-            goal,
-            safe_cells={start},
-            model=model,
-            threshold=threshold,
+            grid, start, goal, safe_cells={start}, model=model, threshold=threshold
         )
-        paths = {
-            "geometric": geometric,
-            "hard_return_0.8": hard,
-        }
+        paths = {"geometric": geometric, "hard_return_0.8": hard}
         for weight in weights:
             result = history_astar(
                 grid,
@@ -142,19 +137,33 @@ def run(trials: int, seed: int, output: Path) -> None:
             )
             paths[f"history_weight_{weight:g}"] = result.path if result.success else ()
 
-        # The same uniform variate realizes the closure for every planner.
-        # This preserves pairing and represents the identical latent world.
         uniforms = [rng.random() for _ in range(trials)]
-        outcomes: dict[str, list[int]] = {}
-        for name, path in paths.items():
-            active = activated_hazards(path, model)
-            failed = [
-                int(bool(active) and draw < probability)
+        active_by_planner = {
+            name: activated_hazards(path, model) for name, path in paths.items()
+        }
+        outcomes = {
+            name: [
+                int(not (bool(active) and draw < probability))
                 for draw in uniforms
             ]
-            outcomes[name] = [1 - value for value in failed]
+            for name, active in active_by_planner.items()
+        }
+        for trial_index, draw in enumerate(uniforms):
+            raw_row = {
+                "seed": seed,
+                "closure_probability": probability,
+                "trial_index": trial_index,
+                "uniform_draw": draw,
+            }
+            raw_row.update(
+                {f"success_{name}": outcomes[name][trial_index] for name in paths}
+            )
+            raw_rows.append(raw_row)
+
+        for name, path in paths.items():
             successes = sum(outcomes[name])
             lower, upper = wilson(successes, trials)
+            active = active_by_planner[name]
             rows.append(
                 {
                     "seed": seed,
@@ -177,6 +186,14 @@ def run(trials: int, seed: int, output: Path) -> None:
         writer.writeheader()
         writer.writerows(rows)
 
+    if raw_output is None:
+        raw_output = output.with_name(f"{output.stem}_trials.csv")
+    raw_output.parent.mkdir(parents=True, exist_ok=True)
+    with raw_output.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(raw_rows[0]))
+        writer.writeheader()
+        writer.writerows(raw_rows)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -187,10 +204,15 @@ def main() -> None:
         type=Path,
         default=Path("results/mechanistic_sweep.csv"),
     )
+    parser.add_argument(
+        "--raw-output",
+        type=Path,
+        default=Path("results/mechanistic_sweep_trials.csv"),
+    )
     args = parser.parse_args()
     if args.trials <= 0:
         parser.error("--trials must be positive")
-    run(args.trials, args.seed, args.output)
+    run(args.trials, args.seed, args.output, args.raw_output)
 
 
 if __name__ == "__main__":
